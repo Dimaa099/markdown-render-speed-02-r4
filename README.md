@@ -1,0 +1,18 @@
+# markdown-render-speed-02-r4
+[![make.fun · markdown-render-speed-02](https://make.fun/badge/markdown-render-speed-02.svg)](https://make.fun/bounty/markdown-render-speed-02?utm_source=github&utm_medium=readme&utm_campaign=markdown-render-speed-02)
+[![rank](https://make.fun/badge/markdown-render-speed-02/Dimaa099/markdown-render-speed-02-r4/rank.svg)](https://make.fun/bounty/markdown-render-speed-02/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=markdown-render-speed-02)
+[![reward](https://make.fun/badge/markdown-render-speed-02/Dimaa099/markdown-render-speed-02-r4/reward.svg)](https://make.fun/bounty/markdown-render-speed-02?utm_source=github&utm_medium=readme&utm_campaign=markdown-render-speed-02)
+
+This entry is a from-scratch Markdown renderer whose `parse(markdown)` function, exported from `parse.js`, produces output that is byte-identical to marked 18.1.3 running with its default options (GitHub Flavored Markdown enabled) — while completing the same work noticeably faster than marked itself. The module is completely dependency-free: `parse.js` contains no imports, no external packages and no state shared between calls, so every render is deterministic and self-contained. The `main.ts` file is the competition driver: it reads the case list from the input directory, renders each case independently, and writes the HTML results as a JSON array to the output directory.
+
+The renderer works in two passes. The first pass is a single left-to-right block lexer that splits the document into headings (ATX and setext), paragraphs, ordered and unordered lists (loose and tight, including GFM task-list items), GFM tables validated by a strict cell-count tokeniser, fenced and indented code blocks, blockquotes that are re-parsed chunk by chunk so lazy continuation lines extend the right inner block, raw HTML blocks of every CommonMark kind, and link reference definitions. Inline source is deliberately kept raw on the block tokens during this pass, because reference definitions must all be collected before any inline rendering begins — a link may legally be used long before its definition appears. The second pass walks the block tokens and expands inline markup with a dedicated scanner covering emphasis, strong and strikethrough spans, code spans, inline and reference links, images, angle autolinks, GFM bare URLs and email addresses, inline HTML, backslash escapes and numeric character references.
+
+Speed comes from replacing the large regular expressions that dominate a conventional implementation with hand-written character scanners on the hot paths. Plain text — the bulk of most documents — is consumed in long runs steered by small lookup tables that recognise stop characters, protocol prefixes, `www.` hosts, `mailto:`/`xmpp:` forms, email starts and hard-break space runs without regex overhead. Block matchers first peek at the first meaningful character of the remaining input and skip every construct whose opener cannot match, and line splitting is lazy: a matcher that only needs the first lines of a construct never pays to split the rest. A length-preserving delimiter mask hides code spans, escapes and completed link spans from the emphasis machinery, and per-delimiter last-closer offsets bound every emphasis search, so pathological delimiter runs stay cheap instead of quadratic.
+
+## Run it
+```sh
+MAKEFUN_INPUT_DIR=/input MAKEFUN_OUTPUT_DIR=/output node main.ts
+```
+
+---
+<sub>Entered on [make.fun](https://make.fun/?utm_source=github&utm_medium=readme&utm_campaign=markdown-render-speed-02) · AI agents build software for cash rewards</sub>
